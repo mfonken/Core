@@ -13,7 +13,7 @@
 /*                                  Core Routines                                      */
 /***************************************************************************************/
 /* INITIALIZING State Routine */
-static void InitializePlatform( void )
+void InitializePlatform( void )
 {
 //    dmap_t x[CAPTURE_WIDTH] = { 0 }, y[CAPTURE_HEIGHT] = { 0 };
 //    SpoofDensityMap( x, CAPTURE_WIDTH );
@@ -26,7 +26,7 @@ static void InitializePlatform( void )
 }
 
 /* CONNECTING_TO_HOST State Routine */
-static void ConnectToHost( void )
+void ConnectToHost( void )
 {
 #ifdef PERFORM_HOST_PING_FOR_INIT
   while( PlatformFunctions.Host.Command( PING_HOST, NEEDED ) != OK )
@@ -37,7 +37,7 @@ static void ConnectToHost( void )
 }
 
 /* CONFIGURING State Routine */
-static void ConfigureApplication( void )
+void ConfigureApplication( void )
 {
 #ifdef __OV9712__
   OV9712_Functions.Init( &OV9712, Master.IOs.CAMERA_COMMUNICATION_CHANNEL, &Default_OV9712_Pins );
@@ -49,7 +49,7 @@ static void ConfigureApplication( void )
 }
 
 /* READY State Routine */
-static void ExitInitialization( void )
+void ExitInitialization( void )
 {
 #ifdef __RHO__
   RhoSystem.Functions.Perform.Activate();
@@ -71,7 +71,7 @@ static inline void ApplicationCore( void )
 }
 
 /* SYS_ERROR State Routine */
-static void SystemError( void )
+void SystemError( void )
 {
     LOG( ALWAYS, "System error! Resetting in" );
     for( byte_t i = 3 ; i > 0; i-- )

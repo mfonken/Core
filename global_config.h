@@ -28,8 +28,9 @@
 
 /* STM-Specific configurations */
 #ifdef __STM32__
-#include "stm32l4xx_it.h"
-#include "stm32l4xx_hal.h"
+//#include "stm32l4xx_it.h"
+//#include "stm32l4xx_hal.h"
+#include "main.h"
 #define _PLATFORM_ STM
 
 /* DMA Config */

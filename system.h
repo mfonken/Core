@@ -6,10 +6,15 @@
 #ifndef system_h
 #define system_h
 
+#include "core_system.h"
+
 /***************************************************************************************/
 /*                                    Includes                                         */
 /***************************************************************************************/
+#include <stddef.h>
 #include <stdint.h>
+#include <stdbool.h>
+
 #ifdef __RHO__
 #include "rho_master.h"
 #else
@@ -22,31 +27,21 @@
 /***************************************************************************************/
 /*                              Type Definitions                                       */
 /***************************************************************************************/
+#ifndef CUSTOM_SYSTEM_STATES
 typedef enum
 {
   INITIALIZING = 1,
-  CONNECTING_TO_HOST,
-  CONFIGURING,
-  READY,
   ACTIVE,
   IDLE,
-  RECONFIGURING,
   SYS_ERROR,
   NUM_SYSTEM_STATES
 } system_state_enum;
 
 static const char * system_state_enum_strings[] =
 {
-  "INITIALIZING",
-  "CONNECTING_TO_HOST",
-  "CONFIGURING",
-  "READY",
-  "ACTIVE",
-  "IDLE",
-  "RECONFIGURING",
-  "SYS_ERROR",
-  "UNKNOWN"
+
 };
+#endif
 
 typedef struct
 {
