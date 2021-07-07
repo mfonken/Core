@@ -6,7 +6,11 @@
 #ifndef master_interface_h
 #define master_interface_h
 
-#include "global_config.h"
+#ifdef GLOBAL_CONFIG
+#include GLOBAL_CONFIG
+#else
+#include "global_config_template.h"
+#endif
 
 /***************************************************************************************/
 /*                                  Master Definitions                                   */

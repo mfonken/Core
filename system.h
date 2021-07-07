@@ -6,8 +6,6 @@
 #ifndef system_h
 #define system_h
 
-#include "core_system.h"
-
 /***************************************************************************************/
 /*                                    Includes                                         */
 /***************************************************************************************/
@@ -15,32 +13,18 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#ifdef __RHO__
-#include "rho_master.h"
+#ifdef APPLICATION_HEADER
+#include APPLICATION_HEADER
 #else
-#ifdef __OV9712__
-#include "OV9712.h"
-#else
-#endif
+#error "No application header defined."
 #endif
 
 /***************************************************************************************/
 /*                              Type Definitions                                       */
 /***************************************************************************************/
+
 #ifndef CUSTOM_SYSTEM_STATES
-typedef enum
-{
-  INITIALIZING = 1,
-  ACTIVE,
-  IDLE,
-  SYS_ERROR,
-  NUM_SYSTEM_STATES
-} system_state_enum;
-
-static const char * system_state_enum_strings[] =
-{
-
-};
+#include "templates/states_template.h"
 #endif
 
 typedef struct

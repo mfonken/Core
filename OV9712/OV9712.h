@@ -9,10 +9,12 @@
 /************************************************************************
  *                             Includes                      *
  ***********************************************************************/
-#include "main.h"
 #include "OV9712_calc.h"
 #include "OV9712_regs.h"
-#include "printers.h"
+
+#ifdef SYSTEM_CONFIG_HEADER
+#include SYSTEM_CONFIG_HEADER
+#endif
 
 /************************************************************************
  *                             Local Types                              *
