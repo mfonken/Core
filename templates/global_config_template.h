@@ -6,7 +6,7 @@
 #ifndef global_config_h
 #define global_config_h
 
-#include "global_types.h"
+//#include "global_types.h"
 
 #error "This is only a template, copy and customize for application"
 

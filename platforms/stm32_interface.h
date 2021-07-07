@@ -11,7 +11,32 @@
 #ifndef stm32_interface_h
 #define stm32_interface_h
 
-#include "master_interface.h"
+#include <stdbool.h>
+
+#include "../master_interface.h"
+
+/* STM-Specific configurations */
+#ifdef __STM32__
+#include "main.h"
+//#define _PLATFORM_ STM
+
+/* DMA Config */
+#define RHO_TIM_DMA_ID      TIM_DMA_ID_CC2
+#define RHO_TIM_DMA_CC	    TIM_DMA_CC2
+#define RHO_TIM_IT_CC       TIM_IT_CC2
+#define RHO_TIM_CHANNEL     TIM_CHANNEL_2
+
+#define CAMERA_PORT     (GPIOA->IDR)
+#define UART_TX_PORT    (USART1->TDR)
+
+#define GPIO_Port_t     GPIO_TypeDef
+#define TIMER_Handle_t  TIM_HandleTypeDef
+#define I2C_Handle_t    I2C_HandleTypeDef
+#define SPI_Handle_t    SPI_HandleTypeDef
+#define UART_Handle_t   UART_HandleTypeDef
+#define USB_Handle_t    PCD_HandleTypeDef
+#endif /* __STM32__ */
+
 
 /***************************************************************************************/
 /*                                  Macro Definitions                                  */

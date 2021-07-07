@@ -13,19 +13,16 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#ifdef APPLICATION_HEADER
-#include APPLICATION_HEADER
+#include "platform.h"
+#ifdef APPLICATION_STATE_HEADER
+#include APPLICATION_STATE_HEADER
 #else
-#error "No application header defined."
+#include "templates/states_template.h"
 #endif
-
 /***************************************************************************************/
 /*                              Type Definitions                                       */
 /***************************************************************************************/
 
-#ifndef CUSTOM_SYSTEM_STATES
-#include "templates/states_template.h"
-#endif
 
 typedef struct
 {
