@@ -10,9 +10,9 @@
 /*                                    Includes                                         */
 /***************************************************************************************/
 #include "../App/global_config.h"
+#include "../App/platform_interface/platform_interface_master.h"
 
 #include "system_types.h"
-#include "platforms/platform_interface_master.h"
 
 /***************************************************************************************/
 /*                                  Macro Definitions                                  */
