@@ -9,20 +9,13 @@
 /***************************************************************************************/
 /*                                    Includes                                         */
 /***************************************************************************************/
-#include <stddef.h>
-#include <stdint.h>
-#include <stdbool.h>
-
+#define THIS_ID 0
 #include "platform.h"
-#ifdef APPLICATION_STATE_HEADER
-#include APPLICATION_STATE_HEADER
-#else
-#include "templates/states_template.h"
-#endif
+
+#include "../App/states.h"
 /***************************************************************************************/
 /*                              Type Definitions                                       */
 /***************************************************************************************/
-
 
 typedef struct
 {

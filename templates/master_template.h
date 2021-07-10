@@ -3,9 +3,9 @@
  *  Group: Rho Core
  ***********************************************************************/
 
-#ifndef master_h
-#define master_h
-
+#ifndef MASTER_H_
+#define MASTER_H_
+#if 0
 /***************************************************************************************/
 /*                                    Includes                                         */
 /***************************************************************************************/
@@ -56,5 +56,5 @@ static system_states_list_t global_states_list =
   { ACTIVE,             IDLE,               ApplicationCore       },
   { SYS_ERROR,          IDLE,               SystemError           }
 };
-
 #endif
+#endif /* MASTER_H_ */

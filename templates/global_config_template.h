@@ -5,7 +5,7 @@
 
 #ifndef global_config_h
 #define global_config_h
-
+#if 0
 //#include "global_types.h"
 
 #error "This is only a template, copy and customize for application"
@@ -21,5 +21,5 @@
 
 #define USART_TIMEOUT	              100
 #define UART_TIMEOUT	              USART_TIMEOUT
-
+#endif
 #endif /* global_config_h */

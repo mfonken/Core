@@ -4,6 +4,7 @@
  ***********************************************************************/
 
 #include "system.h"
+#include "printers.h"
 
 void InitSystem(
   system_t * system,

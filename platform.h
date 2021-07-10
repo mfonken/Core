@@ -9,7 +9,10 @@
 /***************************************************************************************/
 /*                                    Includes                                         */
 /***************************************************************************************/
-#include "platform_interface_master.h"
+#include "../App/global_config.h"
+
+#include "system_types.h"
+#include "platforms/platform_interface_master.h"
 
 /***************************************************************************************/
 /*                                  Macro Definitions                                  */
@@ -51,11 +54,6 @@ typedef struct
   /* Generic utilities */
   protocol_t HostProtocol;
   generic_handle_t HostHandle;
-
-  /* Application utilities */
-#ifdef __RHO__
-  camera_application_flags CameraFlags;
-#endif
 } platform_t;
 
 typedef enum

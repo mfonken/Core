@@ -7,8 +7,6 @@
  *                             Includes                                 *
  ***********************************************************************/
 #include "stm32_interface.h"
-#include "main.h"
-#include "printers.h"
 
 /************************************************************************
  *                             Master Instance                          *
@@ -23,30 +21,30 @@ inline void STM_InterruptHandler( uint16_t GPIO_Pin )
 {
     /* Applicaiton Specific */
 #ifdef __RHO__
-  if(!Platform.CameraFlags.IRQ) return;
+  if(!CameraFlags.IRQ) return;
   switch(GPIO_Pin)
   {
     case VSYNC_Pin:
-        Platform.CameraFlags.Frame = !(flag_t)( VSYNC_GPIO_Port->IDR & VSYNC_Pin );
+        CameraFlags.Frame = !(flag_t)( VSYNC_GPIO_Port->IDR & VSYNC_Pin );
 //        if(!Platform.CameraFlags.Frame)
 //          Platform.CameraFlags.IRQ = false;
 //        else
 //          hrefs = 0;
         break;
     case HREF_Pin:
-        Platform.CameraFlags.Row = (flag_t)( HREF_GPIO_Port->IDR & HREF_Pin );
+        CameraFlags.Row = (flag_t)( HREF_GPIO_Port->IDR & HREF_Pin );
 //        if(Platform.CameraFlags.Frame && Platform.CameraFlags.Row)
 //          HAL_GPIO_WritePin(GPIOB, LED_Pin|DEBUG_Pin, GPIO_PIN_SET);
         /* Row capture is callback connected on HREF=HIGH */
-        if( !Platform.CameraFlags.Row
-         && Platform.CameraFlags.Capture.Flag
-         && Platform.CameraFlags.Capture.Callback != NULL )
-            Platform.CameraFlags.Capture.Callback();
+        if( !CameraFlags.Row
+         && CameraFlags.Capture.Flag
+         && CameraFlags.Capture.Callback != NULL )
+            CameraFlags.Capture.Callback();
         break;
     default:
         return;
   }
-  if(!Platform.CameraFlags.Row || Platform.CameraFlags.Frame )
+  if(!CameraFlags.Row || CameraFlags.Frame )
   {
 //    LOG(ALWAYS, "0x%08x", Master.Utilities.Timer_Primary->hdma[RHO_TIM_DMA_ID]->Instance->CNDTR );
     HAL_DMA_Abort(Master.Utilities.Timer_Primary->hdma[RHO_TIM_DMA_ID]);
@@ -58,13 +56,13 @@ inline void STM_InterruptHandler( uint16_t GPIO_Pin )
 }
 void STM_InterruptEnable( void )
 {
-  STM_ResumeDMA();
+//  STM_ResumeDMA(RHO_TIM_IT_CC, RHO_TIM_CHANNEL);
   HAL_NVIC_EnableIRQ(EXTI0_IRQn);
   HAL_NVIC_EnableIRQ(EXTI4_IRQn);
 }
 void STM_InterruptDisable( void )
 {
-  STM_PauseDMA();
+//  STM_PauseDMA(RHO_TIM_IT_CC, RHO_TIM_CHANNEL);
   HAL_NVIC_DisableIRQ(EXTI0_IRQn);
   HAL_NVIC_DisableIRQ(EXTI4_IRQn);
 }
@@ -72,33 +70,34 @@ void STM_InterruptDisable( void )
 /************************************************************************
  *                              DMA Handlers                            *
  ***********************************************************************/
-inline void STM_PauseDMA( void )
+inline void STM_PauseDMA( uint32_t interrupt, uint32_t channel )
 {
-  __HAL_TIM_DISABLE_IT(Master.Utilities.Timer_Primary, RHO_TIM_IT_CC);
-  TIM_CCxChannelCmd(Master.Utilities.Timer_Primary->Instance, RHO_TIM_CHANNEL, TIM_CCx_DISABLE);
+  __HAL_TIM_DISABLE_IT(Master.Utilities.Timer_Primary, interrupt);
+  TIM_CCxChannelCmd(Master.Utilities.Timer_Primary->Instance, channel, TIM_CCx_DISABLE);
 }
-inline void STM_ResumeDMA( void )
+inline void STM_ResumeDMA( uint32_t interrupt, uint32_t channel )
 {
-  __HAL_TIM_ENABLE_IT(Master.Utilities.Timer_Primary, RHO_TIM_IT_CC);
-  TIM_CCxChannelCmd(Master.Utilities.Timer_Primary->Instance, RHO_TIM_CHANNEL, TIM_CCx_ENABLE);
+  __HAL_TIM_ENABLE_IT(Master.Utilities.Timer_Primary, interrupt ); //RHO_TIM_IT_CC);
+  TIM_CCxChannelCmd(Master.Utilities.Timer_Primary->Instance, channel/*RHO_TIM_CHANNEL*/, TIM_CCx_ENABLE);
 }
-inline void STM_ResetDMA( void )
+inline void STM_ResetDMA( void * dma_destination, uint8_t dma_id )
 {
-    if(_dma_destination != NULL)
-        Master.Utilities.Timer_Primary->hdma[RHO_TIM_DMA_ID]->Instance->CMAR = _dma_destination;
+    if(dma_destination != NULL)
+        Master.Utilities.Timer_Primary->hdma[dma_id/*RHO_TIM_DMA_ID*/]->Instance->CMAR = dma_destination;
 }
 void STM_InitDMA( uint32_t src, uint32_t dst, uint16_t size, bool init_state )
 {
-  if(HAL_DMA_Start_IT(Master.Utilities.Timer_Primary->hdma[RHO_TIM_DMA_ID], src, dst, size) != HAL_OK)
-    Error_Handler();
-  __HAL_TIM_ENABLE_DMA(Master.Utilities.Timer_Primary, RHO_TIM_DMA_CC);
-  if(init_state) STM_ResumeDMA();
-  _dma_destination = dst;
-  _dma_size = size;
+	return;//
+//  if(HAL_DMA_Start_IT(Master.Utilities.Timer_Primary->hdma[RHO_TIM_DMA_ID], src, dst, size) != HAL_OK)
+//    Error_Handler();
+//  __HAL_TIM_ENABLE_DMA(Master.Utilities.Timer_Primary, RHO_TIM_DMA_CC);
+//  if(init_state) STM_ResumeDMA();
+//  _dma_destination = dst;
+//  _dma_size = size;
 }
 uint32_t STM_GetDMAFillAddress( void )
 {
-  return _dma_destination + ( (int32_t)_dma_size - (int32_t)Master.Utilities.Timer_Primary->hdma[RHO_TIM_DMA_ID]->Instance->CNDTR );
+  return 0;//_dma_destination + ( (int32_t)_dma_size - (int32_t)Master.Utilities.Timer_Primary->hdma[RHO_TIM_DMA_ID]->Instance->CNDTR );
 }
 
 /************************************************************************
@@ -106,7 +105,7 @@ uint32_t STM_GetDMAFillAddress( void )
  ***********************************************************************/
 inline uint8_t STM_UartTxDMA( UART_Handle_t * huart, uint8_t * buffer, uint16_t length )
 {
-  return HAL_UART_Transmit( Master.IOs.UART_Primary, buffer, length, UART_TIMEOUT ); //HAL_UART_Transmit_DMA
+  return 0;//HAL_UART_Transmit( Master.IOs.UART_Primary, buffer, length, UART_TIMEOUT ); //HAL_UART_Transmit_DMA
 }
 
 inline uint16_t STM_UartRxDMA( UART_Handle_t * huart, uint8_t * buffer )

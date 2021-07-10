@@ -28,7 +28,7 @@
 #define PERCENT_ACTIVE_APPLICATION  0.20
 #define DEFAULT_FRAME_APPLICATION   20
 
-#define CAPTURE_DIV                 1
+#define CAPTURE_DIV                 2
 
 /************************************************************************
  *                        Derived Configuration                         *
@@ -164,7 +164,7 @@
 /************************************************************************
  *                      Buffer Parameters                               *
  ***********************************************************************/
-#define THRESH_BUFFER_MAX_LENGTH    55000
+#define THRESH_BUFFER_MAX_LENGTH    100000
 
 #define BUFFER_END_PADDING          2
 #define CAPTURE_BUFFER_LENGTH       (uint32_t)( FRAME_WIDTH_BASE + BUFFER_END_PADDING )

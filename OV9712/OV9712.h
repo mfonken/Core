@@ -12,9 +12,10 @@
 #include "OV9712_calc.h"
 #include "OV9712_regs.h"
 
-#ifdef SYSTEM_CONFIG_HEADER
-#include SYSTEM_CONFIG_HEADER
-#endif
+#include "../platform.h"
+//#ifdef SYSTEM_CONFIG_HEADER
+//#include <system_master.h>
+//#endif
 
 /************************************************************************
  *                             Local Types                              *
