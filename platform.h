@@ -12,6 +12,12 @@
 #include "../App/global_config.h"
 #include "../App/platform_interface/platform_interface_master.h"
 
+/* Weak printf prototype to get rid of implicit declaration warning */
+#include "_ansi.h"
+__attribute__((weak)) int	printf (const char *__restrict, ...)
+	_ATTRIBUTE ((__format__ (__printf__, 1, 2)));
+/* printf weak end */
+
 #include "system_types.h"
 
 /***************************************************************************************/
