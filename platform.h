@@ -127,7 +127,7 @@ typedef struct
 
 typedef struct
 {
-  void (*Init)( uint32_t, uint32_t, uint16_t, bool );
+  void (*Init)( dma_info_t * );
   void (*Pause)( void );
   void (*Resume)( void );
   void (*Reset)( void );
