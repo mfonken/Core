@@ -21,11 +21,14 @@ void InitPlatform( platform_t * platform, protocol_t host_communication_protocol
   *platform = (platform_t){ host_communication_protocol, host_communication_handle };
 }
 
-void WritePin( GPIO_t * gpio, uint16_t val )
+void WritePin( GPIO_t * gpio, uint8_t val )
 {
-  PLATFORM_SPECIFIC(WritePin)( gpio->port, gpio->pin, val );
+	PLATFORM_SPECIFIC(WritePin)( gpio->port, gpio->pin, val );
 }
-
+void TogglePin( GPIO_t * gpio )
+{
+	PLATFORM_SPECIFIC(TogglePin)( gpio->port, gpio->pin );
+}
 void SetPortMode(GPIO_t * gpio, uint16_t val )
 {
   PLATFORM_SPECIFIC(SetPortMode)( gpio->port, gpio->pin, val );

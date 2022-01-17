@@ -12,14 +12,6 @@
 #include "../App/global_config.h"
 #include "../App/platform_interface/platform_interface_master.h"
 
-/* Weak printf prototype to quiet implicit declaration warning */
-#include "_ansi.h"
-__attribute__((weak)) int	printf (const char *__restrict, ...)
-	_ATTRIBUTE ((__format__ (__printf__, 1, 2)));
-/* printf weak end */
-
-#include "system_types.h"
-
 /***************************************************************************************/
 /*                                  Macro Definitions                                  */
 /***************************************************************************************/
@@ -107,12 +99,13 @@ void InitPlatform( platform_t *, protocol_t, generic_handle_t );
 
 /*** Custom platform interfaces ***/
 /* GPIO */
-inline void SetPortMode(GPIO_t *, uint16_t );
-inline void WritePin(GPIO_t *, uint16_t );
+void SetPortMode(GPIO_t *, uint16_t );
+void WritePin(GPIO_t *, uint8_t );
+void TogglePin( GPIO_t * gpio );
 
 /* Host */
-inline uint8_t TransmitToHost( uint8_t *, uint16_t );
-inline uint16_t ReceiveFromHost( uint8_t * );
+uint8_t TransmitToHost( uint8_t *, uint16_t );
+uint16_t ReceiveFromHost( uint8_t * );
 platform_status_enum PerformHostCommand( host_command_type_enum, platform_wait_priority_level_enum );
 
 /***************************************************************************************/
@@ -128,10 +121,10 @@ typedef struct
 typedef struct
 {
   void (*Init)( dma_info_t * );
-  void (*Pause)( void );
-  void (*Resume)( void );
-  void (*Reset)( void );
-  uint32_t (*GetFillAddr)( void );
+  void (*Pause)( dma_info_t * );
+  void (*Resume)( dma_info_t * );
+  void (*Reset)( dma_info_t * );
+  uint32_t (*GetFillAddr)( dma_info_t * );
 } platform_interface_dma_functions;
 
 typedef struct
@@ -150,7 +143,8 @@ typedef struct
 {
   void (*SetPortMode)( GPIO_t *, uint16_t );
   uint8_t (*ReadPort)( GPIO_Port_t * );
-  void (*Write)( GPIO_t *, uint16_t );
+  void (*Write)( GPIO_t *, uint8_t );
+  void (*Toggle)( GPIO_t * );
 } platform_interface_gpio_functions;
 
 typedef struct
@@ -211,6 +205,7 @@ static platform_interface_functions PlatformFunctions =
   .GPIO.SetPortMode     = SetPortMode,
   .GPIO.ReadPort        = PLATFORM_SPECIFIC(ReadPort),
   .GPIO.Write           = WritePin,
+  .GPIO.Toggle			= TogglePin,
 
   .Clock.Now            = PLATFORM_SPECIFIC(Timestamp),
   .Clock.SysClockFreq   = PLATFORM_SPECIFIC(SysClockFreq),

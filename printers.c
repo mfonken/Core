@@ -24,7 +24,7 @@ void DrawCurve( uint8_t * a, int32_t l )
     for( uint32_t i = 0; i < l; i++ )
     {
         curr = a[i];
-        sprintf(str_buf, "%3d:", i);
+        sprintf(str_buf, "%3u:", i);
         print( str_buf );
         if( curr > MAX_PRINT_INDEX ) curr = MAX_PRINT_INDEX;
         diff = (int32_t)curr - (int32_t)prev;
@@ -32,7 +32,7 @@ void DrawCurve( uint8_t * a, int32_t l )
         prev = curr;
 
         for( ; vert > 0; vert--) print(" ");
-        int d = abs(diff);
+        int32_t d = abs((int)diff);
         if(diff > 0) for( ; d > 1; d--) print("¯");
         else for( ; d > 2; d--) print("_");
         if( diff > DENSITY_PRINT_SMOOTH_THRESH )

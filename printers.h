@@ -10,7 +10,7 @@
 #include "unilog.h"
 
 #define PRINT_BUFFER_LEN ( 1 << 8 )
-static char str_buf[PRINT_BUFFER_LEN];
+char str_buf[PRINT_BUFFER_LEN];
 
 #define CORE_LOG_LEVEL          DEBUG_2
 #define STATE_DEBUG             DEBUG_2
