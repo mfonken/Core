@@ -9,8 +9,7 @@
 /***************************************************************************************/
 /*                                    Includes                                         */
 /***************************************************************************************/
-#include "../App/global_config.h"
-#include "../App/platform_interface/platform_interface_master.h"
+#include "platform_interface_master.h"
 
 /***************************************************************************************/
 /*                                  Macro Definitions                                  */
@@ -52,6 +51,11 @@ typedef struct
   /* Generic utilities */
   protocol_t HostProtocol;
   generic_handle_t HostHandle;
+
+  /* Application utilities */
+#ifdef __RHO__
+  camera_application_flags CameraFlags;
+#endif
 } platform_t;
 
 typedef enum
@@ -99,13 +103,12 @@ void InitPlatform( platform_t *, protocol_t, generic_handle_t );
 
 /*** Custom platform interfaces ***/
 /* GPIO */
-void SetPortMode(GPIO_t *, uint16_t );
-void WritePin(GPIO_t *, uint8_t );
-void TogglePin( GPIO_t * gpio );
+inline void SetPortMode(GPIO_t *, uint16_t );
+inline void WritePin(GPIO_t *, uint16_t );
 
 /* Host */
-uint8_t TransmitToHost( uint8_t *, uint16_t );
-uint16_t ReceiveFromHost( uint8_t * );
+inline uint8_t TransmitToHost( uint8_t *, uint16_t );
+inline uint16_t ReceiveFromHost( uint8_t * );
 platform_status_enum PerformHostCommand( host_command_type_enum, platform_wait_priority_level_enum );
 
 /***************************************************************************************/
@@ -120,11 +123,11 @@ typedef struct
 
 typedef struct
 {
-  void (*Init)( dma_info_t * );
-  void (*Pause)( dma_info_t * );
-  void (*Resume)( dma_info_t * );
-  void (*Reset)( dma_info_t * );
-  uint32_t (*GetFillAddr)( dma_info_t * );
+  void (*Init)( uint32_t, uint32_t, uint16_t, bool );
+  void (*Pause)( void );
+  void (*Resume)( void );
+  void (*Reset)( void );
+  uint32_t (*GetFillAddr)( void );
 } platform_interface_dma_functions;
 
 typedef struct
@@ -143,8 +146,7 @@ typedef struct
 {
   void (*SetPortMode)( GPIO_t *, uint16_t );
   uint8_t (*ReadPort)( GPIO_Port_t * );
-  void (*Write)( GPIO_t *, uint8_t );
-  void (*Toggle)( GPIO_t * );
+  void (*Write)( GPIO_t *, uint16_t );
 } platform_interface_gpio_functions;
 
 typedef struct
@@ -205,7 +207,6 @@ static platform_interface_functions PlatformFunctions =
   .GPIO.SetPortMode     = SetPortMode,
   .GPIO.ReadPort        = PLATFORM_SPECIFIC(ReadPort),
   .GPIO.Write           = WritePin,
-  .GPIO.Toggle			= TogglePin,
 
   .Clock.Now            = PLATFORM_SPECIFIC(Timestamp),
   .Clock.SysClockFreq   = PLATFORM_SPECIFIC(SysClockFreq),

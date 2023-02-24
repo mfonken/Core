@@ -6,15 +6,42 @@
 #ifndef system_h
 #define system_h
 
+#include "core_system.h"
+
 /***************************************************************************************/
 /*                                    Includes                                         */
 /***************************************************************************************/
-#include "platform.h"
+#include <stddef.h>
+#include <stdint.h>
+#include <stdbool.h>
 
-#include "../App/states.h"
+#ifdef __RHO__
+#include "rho_master.h"
+#else
+#ifdef __OV9712__
+#include "OV9712.h"
+#else
+#endif
+#endif
+
 /***************************************************************************************/
 /*                              Type Definitions                                       */
 /***************************************************************************************/
+#ifndef CUSTOM_SYSTEM_STATES
+typedef enum
+{
+  INITIALIZING = 1,
+  ACTIVE,
+  IDLE,
+  SYS_ERROR,
+  NUM_SYSTEM_STATES
+} system_state_enum;
+
+static const char * system_state_enum_strings[] =
+{
+
+};
+#endif
 
 typedef struct
 {
@@ -50,14 +77,14 @@ static system_t System =
 /***************************************************************************************/
 /*                             Function Definitions                                    */
 /***************************************************************************************/
-void System_Init(              system_t *, system_states_list_t * );
-void System_State_Next(        system_t *                         );
-void System_State_Set(         system_t *,  system_state_enum     );
-void System_State_Perform(     system_t *                         );
-void System_State_Enter(       system_t *,  system_state_enum     );
-bool System_State_IsIn(        system_t *,  system_state_enum     );
-system_state_t * System_State_Get( system_t *                            );
-system_state_t * System_State_GetFromList( system_t *, system_state_enum );
+void InitSystem(               system_t *, system_states_list_t * );
+void NextStateSystem(          system_t *                         );
+void SetStateSystem(           system_t *,  system_state_enum     );
+void PerformStateSystem(       system_t *                         );
+void EnterStateSystem(         system_t *,  system_state_enum     );
+bool IsInStateSystem(          system_t *,  system_state_enum     );
+system_state_t * GetStateSystem( system_t *                            );
+system_state_t * GetStateFromListSystem( system_t *, system_state_enum );
 
 /***************************************************************************************/
 /*                             Function Structures                                     */
@@ -84,14 +111,14 @@ typedef struct
 /***************************************************************************************/
 static system_functions SystemFunctions =
 {
-  .Init           = System_Init,          /* Initialize system with states  */
-  .State.Next     = System_State_Next,    /* Enter next state               */
-  .State.Set      = System_State_Set,     /* Set state, no perform          */
-  .State.Perform  = System_State_Perform, /* Peform current state's routine */
-  .State.Enter    = System_State_Enter,   /* Set and perform state          */
-  .State.IsIn     = System_State_IsIn,    /* Check if system is in state    */
-  .State.Get      = System_State_Get,     /* Get current state              */
-  .State.GetFromList = System_State_GetFromList /* Get state data from list */
+  .Init           = InitSystem,
+  .State.Next     = NextStateSystem,    /* Enter next state               */
+  .State.Set      = SetStateSystem,     /* Set state, no perform          */
+  .State.Perform  = PerformStateSystem, /* Peform current state's routine */
+  .State.Enter    = EnterStateSystem,   /* Set and perform state          */
+  .State.IsIn     = IsInStateSystem,    /* Check if system is in state    */
+  .State.Get      = GetStateSystem,     /* Get current state              */
+  .State.GetFromList = GetStateFromListSystem /* Get state data from list */
 };
 
 #endif
