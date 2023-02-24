@@ -9,8 +9,7 @@
 /***************************************************************************************/
 /*                                    Includes                                         */
 /***************************************************************************************/
-#include "../App/global_config.h"
-#include "../App/platform_interface/platform_interface_master.h"
+#include "platform_interface_master.h"
 
 /***************************************************************************************/
 /*                                  Macro Definitions                                  */
@@ -44,7 +43,8 @@ typedef enum
   I2C_PROTOCOL_TYPE,
 //  SPI_PROTOCOL_TYPE,
   USART_PROTOCOL_TYPE,
-  USB_PROTOCOL_TYPE
+  USB_PROTOCOL_TYPE,
+  DCMI_PROTOCOL_TYPE
 } protocol_t;
 
 typedef struct
@@ -52,6 +52,11 @@ typedef struct
   /* Generic utilities */
   protocol_t HostProtocol;
   generic_handle_t HostHandle;
+
+  /* Application utilities */
+#ifdef __RHO__
+  camera_application_flags CameraFlags;
+#endif
 } platform_t;
 
 typedef enum
@@ -99,13 +104,12 @@ void InitPlatform( platform_t *, protocol_t, generic_handle_t );
 
 /*** Custom platform interfaces ***/
 /* GPIO */
-void SetPortMode(GPIO_t *, uint16_t );
-void WritePin(GPIO_t *, uint8_t );
-void TogglePin( GPIO_t * gpio );
+inline void SetPortMode(GPIO_t *, uint16_t );
+inline void WritePin(GPIO_t *, uint16_t );
 
 /* Host */
-uint8_t TransmitToHost( uint8_t *, uint16_t );
-uint16_t ReceiveFromHost( uint8_t * );
+inline uint8_t TransmitToHost( uint8_t *, uint16_t );
+inline uint16_t ReceiveFromHost( uint8_t * );
 platform_status_enum PerformHostCommand( host_command_type_enum, platform_wait_priority_level_enum );
 
 /***************************************************************************************/
@@ -120,11 +124,11 @@ typedef struct
 
 typedef struct
 {
-  void (*Init)( dma_info_t * );
-  void (*Pause)( dma_info_t * );
-  void (*Resume)( dma_info_t * );
-  void (*Reset)( dma_info_t * );
-  uint32_t (*GetFillAddr)( dma_info_t * );
+  void (*Init)( uint32_t, uint32_t, uint16_t, bool );
+  void (*Pause)( void );
+  void (*Resume)( void );
+  void (*Reset)( void );
+  uint32_t (*GetFillAddr)( void );
 } platform_interface_dma_functions;
 
 typedef struct
@@ -141,10 +145,17 @@ typedef struct
 
 typedef struct
 {
+	uint8_t (*Start_DMA)( DCMI_Handle_t *, uint32_t, uint32_t, uint32_t );
+	uint8_t (*Stop)( DCMI_Handle_t * );
+	uint8_t (*Suspend)( DCMI_Handle_t * );
+	uint8_t (*Resume)( DCMI_Handle_t * );
+} platform_interface_dcmi_functions;
+
+typedef struct
+{
   void (*SetPortMode)( GPIO_t *, uint16_t );
   uint8_t (*ReadPort)( GPIO_Port_t * );
-  void (*Write)( GPIO_t *, uint8_t );
-  void (*Toggle)( GPIO_t * );
+  void (*Write)( GPIO_t *, uint16_t );
 } platform_interface_gpio_functions;
 
 typedef struct
@@ -169,6 +180,7 @@ typedef struct
   platform_interface_dma_functions       DMA;
   platform_interface_uart_functions      USART;
   platform_interface_i2c_functions       I2C;
+  platform_interface_dcmi_functions		 CAM;
   platform_interface_gpio_functions      GPIO;
   platform_interface_clock_functions     Clock;
   platform_interface_host_functions      Host;
@@ -190,11 +202,11 @@ static platform_interface_functions PlatformFunctions =
   .Interrupt.Enable     = PLATFORM_SPECIFIC(InterruptEnable),
   .Interrupt.Disable    = PLATFORM_SPECIFIC(InterruptDisable),
 
-  .DMA.Init             = PLATFORM_SPECIFIC(InitDMA),
-  .DMA.Pause            = PLATFORM_SPECIFIC(PauseDMA),
-  .DMA.Resume           = PLATFORM_SPECIFIC(ResumeDMA),
-  .DMA.Reset            = PLATFORM_SPECIFIC(ResetDMA),
-  .DMA.GetFillAddr      = PLATFORM_SPECIFIC(GetDMAFillAddress),
+//  .DMA.Init             = PLATFORM_SPECIFIC(InitDMA),
+//  .DMA.Pause            = PLATFORM_SPECIFIC(PauseDMA),
+//  .DMA.Resume           = PLATFORM_SPECIFIC(ResumeDMA),
+//  .DMA.Reset            = PLATFORM_SPECIFIC(ResetDMA),
+//  .DMA.GetFillAddr      = PLATFORM_SPECIFIC(GetDMAFillAddress),
 
   .USART.Transmit       = PLATFORM_SPECIFIC(UartTxDMA),
   .USART.Receive        = PLATFORM_SPECIFIC(UartRxDMA),
@@ -202,10 +214,14 @@ static platform_interface_functions PlatformFunctions =
 
   .I2C.Transmit         = PLATFORM_SPECIFIC(I2CMasterTx),
 
+  .CAM.Start_DMA 		= PLATFORM_SPECIFIC(DCMIStart_DMA),
+  .CAM.Stop 			= PLATFORM_SPECIFIC(DCMIStop),
+  .CAM.Suspend 			= PLATFORM_SPECIFIC(DCMISuspend),
+  .CAM.Resume 			= PLATFORM_SPECIFIC(DCMIResume),
+
   .GPIO.SetPortMode     = SetPortMode,
   .GPIO.ReadPort        = PLATFORM_SPECIFIC(ReadPort),
   .GPIO.Write           = WritePin,
-  .GPIO.Toggle			= TogglePin,
 
   .Clock.Now            = PLATFORM_SPECIFIC(Timestamp),
   .Clock.SysClockFreq   = PLATFORM_SPECIFIC(SysClockFreq),
