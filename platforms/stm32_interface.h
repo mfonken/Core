@@ -30,11 +30,17 @@ static uint32_t _dma_destination = NULL, _dma_size = 0;
 void            STM_InterruptHandler( uint16_t GPIO_Pin );
 void            STM_InterruptEnable( void );
 void            STM_InterruptDisable( void );
-void            STM_InitDMA( uint32_t, uint32_t, uint16_t, bool );
-void            STM_PauseDMA( void );
-void            STM_ResumeDMA( void );
-void            STM_ResetDMA( void );
-uint32_t        STM_GetDMAFillAddress( void );
+
+uint8_t			STM_DCMIStart_DMA(DCMI_HandleTypeDef *hdcmi, uint32_t DCMI_Mode, uint32_t pData, uint32_t Length);
+uint8_t 		STM_DCMIStop(DCMI_HandleTypeDef *hdcmi);
+uint8_t 		STM_DCMISuspend(DCMI_HandleTypeDef *hdcmi);
+uint8_t 		STM_DCMIResume(DCMI_HandleTypeDef *hdcmi);
+//void            STM_InitDMA( uint32_t, uint32_t, uint16_t, bool );
+//void            STM_PauseDMA( void );
+//void            STM_ResumeDMA( void );
+//void            STM_ResetDMA( void );
+//uint32_t        STM_GetDMAFillAddress( void );
+
 uint8_t         STM_UartTxDMA( UART_Handle_t * huart, uint8_t * buffer, uint16_t length );
 uint16_t        STM_UartRxDMA( UART_Handle_t * huart, uint8_t * buffer );
 //bool            STM_UartCompleted( UART_Handle_t *huart );

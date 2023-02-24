@@ -58,55 +58,82 @@ inline void STM_InterruptHandler( uint16_t GPIO_Pin )
 }
 void STM_InterruptEnable( void )
 {
-  STM_ResumeDMA();
+//  STM_ResumeDMA();
   HAL_NVIC_EnableIRQ(EXTI0_IRQn);
   HAL_NVIC_EnableIRQ(EXTI4_IRQn);
 }
 void STM_InterruptDisable( void )
 {
-  STM_PauseDMA();
+//  STM_PauseDMA();
   HAL_NVIC_DisableIRQ(EXTI0_IRQn);
   HAL_NVIC_DisableIRQ(EXTI4_IRQn);
 }
 
-/************************************************************************
- *                              DMA Handlers                            *
- ***********************************************************************/
-inline void STM_PauseDMA( void )
+///************************************************************************
+// *                             DCMI Handlers                            *
+// ***********************************************************************/
+uint8_t	STM_DCMIStart_DMA( DCMI_HandleTypeDef * hdcmi, uint32_t DCMI_Mode, uint32_t pData, uint32_t Length )
 {
-  __HAL_TIM_DISABLE_IT(Master.Utilities.Timer_Primary, RHO_TIM_IT_CC);
-  TIM_CCxChannelCmd(Master.Utilities.Timer_Primary->Instance, RHO_TIM_CHANNEL, TIM_CCx_DISABLE);
+	HAL_StatusTypeDef ret = HAL_OK;
+	ret = HAL_DCMI_Start_DMA( hdcmi, DCMI_Mode, pData, Length );
+	return (uint8_t)ret;
 }
-inline void STM_ResumeDMA( void )
+uint8_t STM_DCMIStop( DCMI_HandleTypeDef * hdcmi )
 {
-  __HAL_TIM_ENABLE_IT(Master.Utilities.Timer_Primary, RHO_TIM_IT_CC);
-  TIM_CCxChannelCmd(Master.Utilities.Timer_Primary->Instance, RHO_TIM_CHANNEL, TIM_CCx_ENABLE);
+	HAL_StatusTypeDef ret = HAL_OK;
+	ret = HAL_DCMI_Stop( hdcmi );
+	return (uint8_t)ret;
 }
-inline void STM_ResetDMA( void )
+uint8_t STM_DCMISuspend( DCMI_HandleTypeDef * hdcmi )
 {
-    if(_dma_destination != NULL)
-        Master.Utilities.Timer_Primary->hdma[RHO_TIM_DMA_ID]->Instance->CMAR = _dma_destination;
+	HAL_StatusTypeDef ret = HAL_OK;
+	ret = HAL_DCMI_Suspend( hdcmi );
+	return (uint8_t)ret;
 }
-void STM_InitDMA( uint32_t src, uint32_t dst, uint16_t size, bool init_state )
+uint8_t STM_DCMIResume( DCMI_HandleTypeDef * hdcmi )
 {
-  if(HAL_DMA_Start_IT(Master.Utilities.Timer_Primary->hdma[RHO_TIM_DMA_ID], src, dst, size) != HAL_OK)
-    Error_Handler();
-  __HAL_TIM_ENABLE_DMA(Master.Utilities.Timer_Primary, RHO_TIM_DMA_CC);
-  if(init_state) STM_ResumeDMA();
-  _dma_destination = dst;
-  _dma_size = size;
+	HAL_StatusTypeDef ret = HAL_OK;
+	ret = HAL_DCMI_Resume( hdcmi );
+	return (uint8_t)ret;
 }
-uint32_t STM_GetDMAFillAddress( void )
-{
-  return _dma_destination + ( (int32_t)_dma_size - (int32_t)Master.Utilities.Timer_Primary->hdma[RHO_TIM_DMA_ID]->Instance->CNDTR );
-}
+///************************************************************************
+// *                              DMA Handlers                            *
+// ***********************************************************************/
+//inline void STM_PauseDMA( void )
+//{
+//  __HAL_TIM_DISABLE_IT(Master.Utilities.Timer_Primary, RHO_TIM_IT_CC);
+//  TIM_CCxChannelCmd(Master.Utilities.Timer_Primary->Instance, RHO_TIM_CHANNEL, TIM_CCx_DISABLE);
+//}
+//inline void STM_ResumeDMA( void )
+//{
+//  __HAL_TIM_ENABLE_IT(Master.Utilities.Timer_Primary, RHO_TIM_IT_CC);
+//  TIM_CCxChannelCmd(Master.Utilities.Timer_Primary->Instance, RHO_TIM_CHANNEL, TIM_CCx_ENABLE);
+//}
+//inline void STM_ResetDMA( void )
+//{
+//    if(_dma_destination != NULL)
+//        Master.Utilities.Timer_Primary->hdma[RHO_TIM_DMA_ID]->Instance->CMAR = _dma_destination;
+//}
+//void STM_InitDMA( uint32_t src, uint32_t dst, uint16_t size, bool init_state )
+//{
+//  if(HAL_DMA_Start_IT(Master.Utilities.Timer_Primary->hdma[RHO_TIM_DMA_ID], src, dst, size) != HAL_OK)
+//    Error_Handler();
+//  __HAL_TIM_ENABLE_DMA(Master.Utilities.Timer_Primary, RHO_TIM_DMA_CC);
+//  if(init_state) STM_ResumeDMA();
+//  _dma_destination = dst;
+//  _dma_size = size;
+//}
+//uint32_t STM_GetDMAFillAddress( void )
+//{
+//  return _dma_destination + ( (int32_t)_dma_size - (int32_t)Master.Utilities.Timer_Primary->hdma[RHO_TIM_DMA_ID]->Instance->CNDTR );
+//}
 
 /************************************************************************
  *                             UART Handlers                            *
  ***********************************************************************/
 inline uint8_t STM_UartTxDMA( UART_Handle_t * huart, uint8_t * buffer, uint16_t length )
 {
-  return HAL_UART_Transmit( Master.IOs.UART_Primary, buffer, length, UART_TIMEOUT ); //HAL_UART_Transmit_DMA
+  return HAL_UART_Transmit( Master.IOs->UART_Primary, buffer, length, UART_TIMEOUT ); //HAL_UART_Transmit_DMA
 }
 
 inline uint16_t STM_UartRxDMA( UART_Handle_t * huart, uint8_t * buffer )

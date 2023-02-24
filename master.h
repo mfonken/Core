@@ -14,7 +14,7 @@
 /***************************************************************************************/
 /*                              Function Definitions                                   */
 /***************************************************************************************/
-void Master_Connect( I2C_Handle_t *, TIMER_Handle_t *, UART_Handle_t * );
+void Master_Connect( master_ios_t * ios );
 void Master_Init( void );
 void Master_Run( void );
 
@@ -23,7 +23,7 @@ void Master_Run( void );
 /***************************************************************************************/
 typedef struct
 {
-  void (*Connect)( I2C_Handle_t *, TIMER_Handle_t *, UART_Handle_t * );
+  void (*Connect)( master_ios_t * );
   void (*Init)( void );
   void (*Run)( void );
 } master_functions_t;
@@ -42,14 +42,14 @@ void InitializePlatform( void );
 void ConnectToHost( void );
 void ConfigureApplication( void );
 void ExitInitialization( void );
-inline void ApplicationCore( void );
+void ApplicationCore( void );
 void SystemError( void );
 
 /***************************************************************************************/
 /*                                Core State List                                      */
 /***************************************************************************************/
 static system_states_list_t global_states_list =
-{
+{// State				Next State			Routine Handle
   { INITIALIZING,       CONNECTING_TO_HOST, InitializePlatform    },
   { CONNECTING_TO_HOST, CONFIGURING,        ConnectToHost         },
   { CONFIGURING,        READY,              ConfigureApplication  },

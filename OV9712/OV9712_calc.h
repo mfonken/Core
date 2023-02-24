@@ -15,9 +15,8 @@
 /************************************************************************
  *                             Settings                                 *
  ***********************************************************************/
-//#define OV9712_1280x800_CONFIG
+#define OV9712_1280x800_CONFIG
 //#define USE_RGGB_G_SKIP
-
 /************************************************************************
  *                      Application Configuration                       *
  ***********************************************************************/
@@ -52,8 +51,8 @@
  *                      OV9712 Datasheet Values                         *
  * See https://datasheet.lcsc.com/szlcsc/OmniVision-Technologies-OV09712-V28A-1D_C11171.pdf *
  ***********************************************************************/
-#define DEFAULT_HOFFSET             0x131
-#define DEFAULT_VOFFSET             0x6
+#define DEFAULT_HOFFSET             0x0 //131
+#define DEFAULT_VOFFSET             0x0 //6
 
 /* Color bar settings */
 #define ENABLE_COLOR_BAR            false
@@ -243,26 +242,26 @@
 /************************************************************************
  *                       Dynamic Calculation                            *
  ***********************************************************************/
-static uint8_t _subSample           = DEFAULT_SUBSAMPLE;
-static double _percentActive        = DEFAULT_PERCENT_ACTIVE;
-static double _frameRate            = DEFAULT_FRAME_RATE;
+static uint8_t _subSample = DEFAULT_SUBSAMPLE;
+static double _percentActive = DEFAULT_PERCENT_ACTIVE;
+static double _frameRate = DEFAULT_FRAME_RATE;
 
-static void SetSubsample( uint8_t subSample )
+static void SetSubsample(uint8_t subSample)
 {
-    _subSample = subSample;
+	_subSample = subSample;
 }
 
-static void SetPercentActive( double percentActive )
+static void SetPercentActive(double percentActive)
 {
-    if( percentActive > PERCENT_ACTIVE_APPLICATION )
-        _percentActive = PERCENT_ACTIVE_APPLICATION;
-    else
-        _percentActive = percentActive;
+	if (percentActive > PERCENT_ACTIVE_APPLICATION)
+		_percentActive = PERCENT_ACTIVE_APPLICATION;
+	else
+		_percentActive = percentActive;
 }
 
-static void SetFrameRate( double frameRate )
+static void SetFrameRate(double frameRate)
 {
-    _frameRate = frameRate;
+	_frameRate = frameRate;
 }
 
 #endif /* OV9712_calc_h */

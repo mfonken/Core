@@ -2,7 +2,7 @@
  *  File: OV9712.h
  *  Group: OV9712 Firmware
  ***********************************************************************/
- 
+
 #ifndef _OV9712_H    /* Guard against multiple inclusion */
 #define _OV9712_H
 
@@ -169,13 +169,13 @@
 #define ENDR			0xff
 
 /*	TERMS *
-* AEC - Auto Exposure Control
-* AGC - Auto Gain Control
-* BLC - Black level Calibration
-**/
+ * AEC - Auto Exposure Control
+ * AGC - Auto Gain Control
+ * BLC - Black level Calibration
+ **/
 
 #endif
 
 /* *****************************************************************************
-End of File
-*/
+ End of File
+ */

@@ -13,67 +13,91 @@
  ***********************************************************************/
 static hw_register_t OV9712_regs[] =
 {
-    {DVP_CTRL_00,	0xb0}, // [7:6]VSYNC - vsync_old(b00), vsync_new(b01), or vsync3(b10)|[5]pclk_gate_en|[4]vsync_gate|[3]vsync3_w_sel|[2]pclk reverse|[1]href reverse|[0]vsync reverse
-    {REG5C,	REG5C_V}, // [6:5]PLL Pre-divider - /1(b0x), /2(b10), or /4(b11)|[4:0]Pll-multiplier CLK2=CLK1 x (32-[4:0])
-//    {REG5D,     	REG5D_V}, // [5:4]Output drive capability - 1x(b00), 2x(b01), 3x(b10), or 4x(b11)
+	{ DVP_CTRL_00, 0x80 }, // [7:6]VSYNC - vsync_old(b00), vsync_new(b01), or vsync3(b10)|[5]pclk_gate_en|[4]vsync_gate|[3]vsync3_w_sel|[2]pclk reverse|[1]href reverse|[0]vsync reverse
+	{ DVP_CTRL_01, 0x21 },
+	{ DVP_CTRL_09, 0x32 },
+//	{ DVP_CTRL_12, 0x23 },
 
-    {REG57,		 REG57_V},
-    {REG58,		 REG58_V},
-    {REG59,		 REG59_V},
-//#ifndef OV9712_1280x800_CONFIG
-    {LENC_CTRL_23, 0x05}, // [2]V_skip|[0]H_skip - Normal image output(b0) or Sub-sampling output(b1)
-//#endif
-    {AHSIZE,     AHSIZE_V},
-    {AVSIZE,     AVSIZE_V},
-    {REG32,      REG32_V},
-    {HSTART,     HSTART_V},
-    {REG03,      REG03_V},
-    {VSTART, 	 VSTART_V},
+	//{ REG5C, REG5C_V }, // [6:5]PLL Pre-divider - /1(b0x), /2(b10), or /4(b11)|[4:0]Pll-multiplier CLK2=CLK1 x (32-[4:0])
+//    {REG5D, REG5D_V}, // [5:4]Output drive capability - 1x(b00), 2x(b01), 3x(b10), or 4x(b11)
 
-    {DSP_CTRL_1, DSP_CTRL_1_V}, // [7]SMPH Mean enable|[3]Color bar without pixel overlay|[1:0]Patterns
-    {ENDR}
+	{ REG57, REG57_V },
+	{ REG58, REG58_V },
+	{ REG59, REG59_V },
+////#ifndef OV9712_1280x800_CONFIG
+////	{ LENC_CTRL_23, 0x05 }, // [2]V_skip|[0]H_skip - Normal image output(b0) or Sub-sampling output(b1)
+////#endif
+	{ AHSIZE, AHSIZE_V },
+	{ AVSIZE, AVSIZE_V },
+	{ REG32, REG32_V },
+	{ HSTART, HSTART_V },
+	{ REG03, REG03_V },
+	{ VSTART, VSTART_V },
+
+//	{ DSP_CTRL_1, DSP_CTRL_1_V | (1 << 4) }, // [7]SMPH Mean enable|[3]Color bar without pixel overlay|[1:0]Patterns
+	{ ENDR }
 };
 
 /************************************************************************
  *                      Local Function Definitions                      *
  ***********************************************************************/
-void OV9712_Init( OV9712_t * ov9712, I2C_Handle_t * i2c_port, OV9712_pins_t * pins )
+void OV9712_Init(OV9712_t *ov9712, camera_params_t * params, I2C_Handle_t *i2c_port, DCMI_Handle_t *dcmi_port, OV9712_pins_t *pins)
 {
-  ov9712->CAM_I2C_PORT = i2c_port;
-  if( pins == NULL) return;
-  ov9712->Pins = pins;
-  OV9712_Functions.Enable(ov9712);
-  HAL_Delay(50);
-  hw_register_t reg;
-  for( int i = 0; i < sizeof(OV9712_regs) / sizeof(OV9712_regs[0]); i++ )
-  {
-    reg = OV9712_regs[i];
-    if( reg.Address == ENDR ) break;
-    OV9712_Functions.Write( ov9712, reg.Address, reg.Value );
-  }
+	memcpy( &ov9712->params, params, sizeof(camera_params_t) );
+	ov9712->params.buffer_size = ov9712->params.width * ov9712->params.height * ov9712->params.depth / 2;
+	ov9712->i2c = i2c_port;
+	ov9712->dcmi = dcmi_port;
+	ov9712->pins = pins;
+
+	PlatformFunctions.CAM.Start_DMA(ov9712->dcmi, DCMI_MODE_CONTINUOUS, (uint32_t)ov9712->params.buffer, (uint32_t)ov9712->params.buffer_size);
+	OV9712_Functions.Enable(ov9712);
+	HAL_Delay(50);
+	hw_register_t reg;
+	for (int i = 0; i < sizeof(OV9712_regs) / sizeof(OV9712_regs[0]); i++) {
+		reg = OV9712_regs[i];
+		if (reg.Address == ENDR)
+			break;
+		OV9712_Functions.Write(ov9712, reg.Address, reg.Value);
+	}
 }
-void OV9712_Write( OV9712_t * ov9712, uint8_t r, uint8_t v )
+void OV9712_Write(OV9712_t *ov9712, uint8_t r, uint8_t v)
 {
-  uint8_t data[2] = { r, v };
-  PlatformFunctions.I2C.Transmit( ov9712->CAM_I2C_PORT, ov9712->ADDR, data, 2, 100);
+	uint8_t data[2] = { r, v };
+	PlatformFunctions.I2C.Transmit(ov9712->i2c, ov9712->address, data, 2, 100);
 }
 
-void OV9712_Enable( OV9712_t * ov9712 )
+void OV9712_Enable(OV9712_t *ov9712)
 {
-  if( ov9712->Pins == NULL) return;
-  PlatformFunctions.GPIO.Write( &ov9712->Pins->ENABLE, GPIO_PIN_SET);
-//  PlatformFunctions.GPIO.Write( &ov9712->Pins->LOW_VOLTAGE, GPIO_PIN_SET);
-//  PlatformFunctions.GPIO.Write( &ov9712->Pins->POWER_DOWN, GPIO_PIN_RESET);
-  PlatformFunctions.GPIO.SetPortMode( &ov9712->Pins->MASTER_CLOCK, GPIO_MODE_AF_PP);
+	if (ov9712->pins == NULL)
+		return;
+	PlatformFunctions.GPIO.Write( &ov9712->pins->RESET, GPIO_PIN_SET );
+	PlatformFunctions.GPIO.Write( &ov9712->pins->LOW_VOLTAGE, GPIO_PIN_SET );
+	PlatformFunctions.GPIO.Write( &ov9712->pins->POWER_DOWN, GPIO_PIN_RESET );
+	PlatformFunctions.GPIO.SetPortMode( &ov9712->pins->MASTER_CLOCK, GPIO_MODE_AF_PP );
+	if (PlatformFunctions.CAM.Resume( ov9712->dcmi ) != HAL_OK)
+	{
+		Error_Handler();
+	}
 }
 
-void OV9712_Disable( OV9712_t * ov9712 )
+void OV9712_Disable(OV9712_t *ov9712)
 {
-  if( ov9712->Pins == NULL) return;
-  PlatformFunctions.GPIO.Write( &ov9712->Pins->ENABLE, GPIO_PIN_RESET);
-//  PlatformFunctions.GPIO.Write( &ov9712->Pins->LOW_VOLTAGE, GPIO_PIN_RESET);
-//  PlatformFunctions.GPIO.Write( &ov9712->Pins->POWER_DOWN, GPIO_PIN_SET);
-  PlatformFunctions.GPIO.SetPortMode( &ov9712->Pins->MASTER_CLOCK, GPIO_MODE_INPUT);
+	if (ov9712->pins == NULL)
+		return;
+	PlatformFunctions.GPIO.Write(&ov9712->pins->LOW_VOLTAGE, GPIO_PIN_RESET);
+	PlatformFunctions.GPIO.Write(&ov9712->pins->POWER_DOWN, GPIO_PIN_SET);
+	PlatformFunctions.GPIO.SetPortMode(&ov9712->pins->MASTER_CLOCK, GPIO_MODE_INPUT);
+	if (PlatformFunctions.CAM.Suspend(ov9712->dcmi) != HAL_OK)
+	{
+		Error_Handler();
+	}
+}
+
+void OV9712_Reset(OV9712_t *ov9712)
+{
+	PlatformFunctions.GPIO.Write(&ov9712->pins->RESET, GPIO_PIN_RESET);
+	HAL_Delay(1000);
+	PlatformFunctions.GPIO.Write(&ov9712->pins->RESET, GPIO_PIN_SET);
 }
 
 /************************************************************************
@@ -83,47 +107,47 @@ void OV9712_Disable( OV9712_t * ov9712 )
 hw_register_t dummy[] =
 {
   /* Clock Selection */
-  {REG5C,               0x59}, // [6:5]PLL Pre-divider - /1(b0x), /2(b10), or /4(b11)|[4:0]Pll-multiplier CLK2=CLK1 x (32-[4:0])
+  {REG5C,     		0x59}, // [6:5]PLL Pre-divider - /1(b0x), /2(b10), or /4(b11)|[4:0]Pll-multiplier CLK2=CLK1 x (32-[4:0])
 
   /* Driving Capability and Direction Control for I/O Pins */
-  {REG5D,               0xc4}, // [5:4]Output drive capability - 1x(b00), 2x(b01), 3x(b10), or 4x(b11)
-  {REG56,               0x1f}, // [7:5]Reserved|[4]HREF|[3]VSYNC|[2]PCLK|[1]Y9|[0]Y8
+  {REG5D,        	0xc4}, // [5:4]Output drive capability - 1x(b00), 2x(b01), 3x(b10), or 4x(b11)
+  {REG56,           0x1f}, // [7:5]Reserved|[4]HREF|[3]VSYNC|[2]PCLK|[1]Y9|[0]Y8
 
   /* Histogram-Based AEC Algorithm Adjustment Controls */
-  {REG72,               0x60}, // BP Level   - Upper limit for B pixels
-  {REG73,               0x49}, // WP Level   - Lower limit for W pixels
-  {REG74,               0xe0}, // VBP Level  - Upper limit for VB pixels
-  {REG75,               0xe0}, // VWP Level  - Lower limit for VW pixels
-  {REG76,               0xc0}, // BP Number  - Lower probability for B pixels to trigger auto AEC/AGC
-  {REG77,               0xc0}, // WP Number  - Lower probability for W pixels to trigger auto AEC/AGC
-  {REG78,               0xff}, // VBP Number - Lower probability for B pixels to trigger fast AEC/AGC
-  {REG79,	        0xff}, // VWP Number - Lower probability for W pixels to trigger fast AEC/AGC
+  {REG72,           0x60}, // BP Level   - Upper limit for B pixels
+  {REG73,           0x49}, // WP Level   - Lower limit for W pixels
+  {REG74,           0xe0}, // VBP Level  - Upper limit for VB pixels
+  {REG75,           0xe0}, // VWP Level  - Lower limit for VW pixels
+  {REG76,           0xc0}, // BP Number  - Lower probability for B pixels to trigger auto AEC/AGC
+  {REG77,           0xc0}, // WP Number  - Lower probability for W pixels to trigger auto AEC/AGC
+  {REG78,           0xff}, // VBP Number - Lower probability for B pixels to trigger fast AEC/AGC
+  {REG79,	       	0xff}, // VWP Number - Lower probability for W pixels to trigger fast AEC/AGC
 
   /* Test Pattern Selection Control */
-  {COM7,                0x42}, // [1]Color bar with pixel overlay
+  {COM7,            0x42}, // [1]Color bar with pixel overlay
 
   /* Histogram-Based AEC/AGC Reference Area Option */
-  {COM8,                0x85}, // [5]Banding on/off|[3]LAEC on/off
-  {COM9,                0x10}, // [3]Enable AEC below banding value (0 - 1/100s<exposure<1/120s, 1 - allow shorter/longer exposure under strong light conditions)
-  {COM5,                0x40}, // [3]VAEC on/off (Add frame)
-  {REG03,               0x02}, // [7:5]VAEC Ceiling - 1(b001),2(b010),3(b011), or 7(b1XX)
-  {COM13,               0x03}, // [5:4]Auto trigger VAEC when gain is greater than 2x(b00),4x(b01),8x(b10), or 16x(b11)
-  {COM14,               0x00}, // [5:0]Maximum banding steps in terms of row exposure
-  {REG4A,               0xd0}, // [1:0]Banding filter value BDst[9:8]
-  {REG49,               0x00}, // [7:0]Banding filter value BDst[7:0]
+  {COM8,            0x85}, // [5]Banding on/off|[3]LAEC on/off
+  {COM9,            0x10}, // [3]Enable AEC below banding value (0 - 1/100s<exposure<1/120s, 1 - allow shorter/longer exposure under strong light conditions)
+  {COM5,            0x40}, // [3]VAEC on/off (Add frame)
+  {REG03,           0x02}, // [7:5]VAEC Ceiling - 1(b001),2(b010),3(b011), or 7(b1XX)
+  {COM13,           0x03}, // [5:4]Auto trigger VAEC when gain is greater than 2x(b00),4x(b01),8x(b10), or 16x(b11)
+  {COM14,           0x00}, // [5:0]Maximum banding steps in terms of row exposure
+  {REG4A,           0xd0}, // [1:0]Banding filter value BDst[9:8]
+  {REG49,           0x00}, // [7:0]Banding filter value BDst[7:0]
 
   /* BLC Control Functions */
-  {REG41,               0x82}, // [3:0]Target black level for algorithm
-  {REG43,               0xc0}, // [7:6]BLC line selection - R/Gr offset(bX0), R/Gb offset(b01), or all offsets(b11)
-  {COM24,               0x02}, // [3]Manual BLC trigger for 64fr|[2]BLC always on
-  {HOFFS,               0x00}, // [7:6]BLC offset for Gb[9:8]|[5:4]BLC offset for Gr[9:8]|[3:2]BLC offset for B[9:8]|[1:0]BLC offset for R[9:8]
-  {ROFFS,               0x00}, // [7:0]BLC offset for R[7:0]
-  {BOFFS,               0x00}, // [7:0]BLC offset for B[7:0]
-  {GROFFS,              0x00}, // [7:0]BLC offset for Gr[7:0]
-  {GBOFFS,              0x00}, // [7:0]BLC offset for Gb[7:0]
+  {REG41,           0x82}, // [3:0]Target black level for algorithm
+  {REG43,           0xc0}, // [7:6]BLC line selection - R/Gr offset(bX0), R/Gb offset(b01), or all offsets(b11)
+  {COM24,           0x02}, // [3]Manual BLC trigger for 64fr|[2]BLC always on
+  {HOFFS,           0x00}, // [7:6]BLC offset for Gb[9:8]|[5:4]BLC offset for Gr[9:8]|[3:2]BLC offset for B[9:8]|[1:0]BLC offset for R[9:8]
+  {ROFFS,           0x00}, // [7:0]BLC offset for R[7:0]
+  {BOFFS,           0x00}, // [7:0]BLC offset for B[7:0]
+  {GROFFS,          0x00}, // [7:0]BLC offset for Gr[7:0]
+  {GBOFFS,          0x00}, // [7:0]BLC offset for Gb[7:0]
 
   /* Digital Gain Control */
-  {GAIN,                0x00}, // [7]Apply gain if gain >= 2x(b0), Apply gain if gain >= 4x(b1)
+  {GAIN,            0x00}, // [7]Apply gain if gain >= 2x(b0), Apply gain if gain >= 4x(b1)
 
   /* Pre-DSP Registers */
   {DSP_CTRL_1,		0x8a}, // [7]SMPH Mean enable|[3]Color bar without pixel overlay|[1:0]Patterns
@@ -145,14 +169,14 @@ hw_register_t dummy[] =
   {LENC_CTRL_6,		0x90}, // LCC_Y[7:0] for R
   {LENC_CTRL_8, 	0x22}, // [6:0]First group of factors for R
   {LENC_CTRL_9, 	0xc2}, // [6:0]Second group of factors for R
-  {LENC_CTRL_10, 	0x87}, // [7:4]Second group of factors for R|[3:0]First group of factors for R
+  {LENC_CTRL_10,	0x87}, // [7:4]Second group of factors for R|[3:0]First group of factors for R
 
   {LENC_CTRL_13,	0x12}, // [5:4]LCC_Y[9:8] for G|[2:0]LCC_X[9:8] for G
   {LENC_CTRL_11,	0x80}, // LCC_X[7:0] for G
   {LENC_CTRL_12,	0x90}, // LCC_Y[7:0] for G
-  {LENC_CTRL_14, 	0x22}, // [6:0]First group of factors for G
-  {LENC_CTRL_15, 	0xc2}, // [6:0]Second group of factors for G
-  {LENC_CTRL_16, 	0x87}, // [7:4]Second group of factors for G|[3:0]First group of factors for G
+  {LENC_CTRL_14,	0x22}, // [6:0]First group of factors for G
+  {LENC_CTRL_15,	0xc2}, // [6:0]Second group of factors for G
+  {LENC_CTRL_16,	0x87}, // [7:4]Second group of factors for G|[3:0]First group of factors for G
 
   {LENC_CTRL_19,	0x12}, // [5:4]LCC_Y[9:8] for B|[2:0]LCC_X[9:8] for B
   {LENC_CTRL_17,	0x80}, // LCC_X[7:0] for B
@@ -164,12 +188,12 @@ hw_register_t dummy[] =
   {LENC_CTRL_23,	0x00}, // [2]V_skip|[0]H_skip - Normal image output(b0) or Sub-sampling output(b1)
 
   /* White Balance Function */
-  {COM25,               0x10}, // [4]Manual WB control(b0)| or ISP auto WB(b1)
-  {BLUE,                0x40}, // Blue[11:4]
-  {GREEN,               0x00}, // Green[11:4]
-  {RED,                 0x40}, // Red[11:4]
-  {BRL,                 0x00}, // [7:4]Blue[3:0]|[3:0]Red[3:0]
-  {GL,                  0x00}, // [7:4]Green[3:0]
+  {COM25,           0x10}, // [4]Manual WB control(b0)| or ISP auto WB(b1)
+  {BLUE,            0x40}, // Blue[11:4]
+  {GREEN,           0x00}, // Green[11:4]
+  {RED,             0x40}, // Red[11:4]
+  {BRL,             0x00}, // [7:4]Blue[3:0]|[3:0]Red[3:0]
+  {GL,              0x00}, // [7:4]Green[3:0]
   {AWB_CTRL_0,		0x07}, // [2]AWB fast mode enable|[1]AWB bias enable|[0]AWB bias plus enable - add bias after AWB gain is calculated
   {AWB_CTRL_2,		0x04}, // AWB stable range 1
   {AWB_CTRL_3,		0x08}, // AWB stable range 2
@@ -186,7 +210,7 @@ hw_register_t dummy[] =
   {YAVG_CTRL_4,		0x00}, // [7]yavg_win_man|[5:4]yavg_winofv[9:8]|[2:0]yavg_winh[10:8]
 
   /* System Control Registers */
-  {SC_CTRL_0,           0x0c}, // [7]Bypass DVP|[5]snr_rst_ctrl_for DVP|[4]snr_rst_ctrl for DSP|[3]DVP gated clock|[2]DSP gated clock|[1]DVP reset|[0]DSP reset
+  {SC_CTRL_0,       0x0c}, // [7]Bypass DVP|[5]snr_rst_ctrl_for DVP|[4]snr_rst_ctrl for DSP|[3]DVP gated clock|[2]DSP gated clock|[1]DVP reset|[0]DSP reset
 
   /* DVP Control Register */
   {DVP_CTRL_00,		0x80}, // [7:6]VSYNC - vsync_old(b00), vsync_new(b01), or vsync3(b10)|[5]pclk_gate_en|[4]vsync_gate|[3]vsync3_w_sel|[2]pclk reverse|[1]href reverse|[0]vsync reverse
@@ -198,7 +222,7 @@ hw_register_t dummy[] =
   {DVP_CTRL_06,		0x00}, // [7]blk_tog|[6]vsync_width_sel|[5:3]h2v delay|[2:0]v2h delay
   {DVP_CTRL_07,		0x80}, // vsync_width_l
   {DVP_CTRL_08,		0x24}, // [7:6]vsync_width_h|[5:4]sof2h delay offset|[3]ddr_phase|[2]Test pattern 10bit(b0) or 8bit(b1)[1:0]No pattern(b00), 1,2,4,8,?(b01), or 1,1,2,2,?(b10)
-  {DVP_CTRL_09,     0xa6}, // [7]sof_rst_en,[6:5]chg_sel for recalculating DVP timing for HSYNC mode|[4]hsync_en|[3]hsync_dvp_en|[2]hsync_1st_en|[1:0]snr(b00), reg(b01), or auto(b10)
+  {DVP_CTRL_09,    	0xa6}, // [7]sof_rst_en,[6:5]chg_sel for recalculating DVP timing for HSYNC mode|[4]hsync_en|[3]hsync_dvp_en|[2]hsync_1st_en|[1:0]snr(b00), reg(b01), or auto(b10)
   {DVP_CTRL_0a,		0x40}, // [7:4]FIFO buffer size|[3:0]dmy_line_nu
   {DVP_CTRL_0b,		0x00}, // eof2v delay[23:16]
   {DVP_CTRL_0c,		0x01}, // eof2v delay[15:8]

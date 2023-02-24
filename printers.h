@@ -8,7 +8,7 @@
 
 #include "resources.h"
 #include "platform.h"
-#include "genlog.h"
+#include "unilog.h"
 
 #define PRINT_BUFFER_LEN ( 1 << 8 )
 static char str_buf[PRINT_BUFFER_LEN];

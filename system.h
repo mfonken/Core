@@ -6,7 +6,7 @@
 #ifndef system_h
 #define system_h
 
-#include "core_system.h"
+#include "master_interface.h"
 
 /***************************************************************************************/
 /*                                    Includes                                         */
@@ -14,6 +14,8 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
+
+#include "unilog.h"
 
 #ifdef __RHO__
 #include "rho_master.h"
@@ -24,6 +26,8 @@
 #endif
 #endif
 
+#define STATE_DEBUG             DEBUG_2
+
 /***************************************************************************************/
 /*                              Type Definitions                                       */
 /***************************************************************************************/
@@ -31,6 +35,9 @@
 typedef enum
 {
   INITIALIZING = 1,
+  CONNECTING_TO_HOST,
+  CONFIGURING,
+  READY,
   ACTIVE,
   IDLE,
   SYS_ERROR,
@@ -39,7 +46,13 @@ typedef enum
 
 static const char * system_state_enum_strings[] =
 {
-
+	"INITIALIZING" ,
+	"CONNECTING_TO_HOST",
+	"CONFIGURING",
+	"READY",
+	"ACTIVE",
+	"IDLE",
+	"SYS_ERROR"
 };
 #endif
 
